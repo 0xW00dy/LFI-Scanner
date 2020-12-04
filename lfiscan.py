@@ -62,8 +62,6 @@ def test(url):
         for test in tests:
             payload = craftPayload(strip(url), test) 
             if inject(payload):
-                print("Test is succesful !")
-                print("Found the website vulnerable for", test, "LFI !")
                 print("Payload:", payload)
     else:
         print("The url may not be injectable")
@@ -90,17 +88,21 @@ def inject(payload):
                 if error in r.text:
                     vuln = True
             print("Website might be vulnerable.")
-            print("Try injecting with --inject [url]")
+            print("Try injecting with --inject [url] [ressource]\n")
             return True
         elif r.status_code == 403:
-            print("Website might be vulnerable: returned", r.status_code)
+            print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         elif r.status_code == 301 or r.status_code == 302:
-            print("Website might be vulnerable: returned", r.status_code)
+            print("Website might be vulnerable: returned", r.status_code, "\n")
             return False
             
-        
 
-if __name__ == '__main__':
-    if sys.argv[1] == "test":
+if __name__ == '__main__': #NOTE: THIS IS ONLY FOR TESTING, WILL SOON USE GETOPT
+    if sys.argv[1] == "--test": 
         test(sys.argv[2])
+    elif sys.argv[1] == "--inject" and :
+        if len(sys.argv) == 3:
+            itype = argv[2]
+            resource = argv[3]
+        
