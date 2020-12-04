@@ -19,23 +19,44 @@ payloads = {
     "zip"          : "zip://"
 }
 
+tests = ["../", "php://", "data://", "zip://"]
+
+
+
 def usage():
     print("Usage: ./lfiscan.py [option] [argument]")
     print("Options:")
     print("--url <url>            : URL of the website")
     print("--scan                 : Crawl the website to search for vulnerable URLs")
-    print("--test                 : Tests a vulnerable URL for LFI")
+    print("--test                 : Tests an URL for LFI")
     print("--inject [type] [opts] : Executes LFI Injection on vulnerable URL")
     print("Be careful, this app only tracks for LFI vulnerabilities in URLs.")
 
-def mayBeVulnerable(url):
+def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
     if regex.search(url):
         return True
     return False
 
+def strip(url):
+    if injectable(url):
+        regex = re.compile('\?[a-zA-Z0-9]{1,}=')
+        idx = re.findall(regex, url)
+        return ''.join([url.split(idx[0])[0], idx[0]]))
+    else:
+        print("Erreur, l'url rentrée n'est pas au bon format.")
+        return ""
+
 def scan(url):
     pass
+
+def test(url):
+    if injectable(url):
+        for test in tests:
+            payload = craftPayload(strip(url), test, )
+    else:
+        print("The url may not be injectable")
+        
 
 def test(url):
     pass
@@ -43,6 +64,8 @@ def test(url):
 def craftPayload(url, itype, arguments):
     if itype == filter:
         crafted = url + payload["filter"][arguments[0]] + arguments[1]
+    elif itype in tests:
+        crafted = url + itype
 
 #lfiscan.py --inject --resource=index.php 
 def inject(url, itype, **argument):
