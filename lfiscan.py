@@ -21,8 +21,6 @@ payloads = {
 
 tests = ["../", "php://", "data://", "zip://"]
 
-
-
 def usage():
     print("Usage: ./lfiscan.py [option] [argument]")
     print("Options:")
@@ -53,22 +51,26 @@ def scan(url):
 def test(url):
     if injectable(url):
         for test in tests:
-            payload = craftPayload(strip(url), test, )
+            payload = craftPayload(strip(url), test) 
+            if inject(payload):
+                print("Test is succesful !")
+                print("Found the website vulnerable for", test, "LFI !")
+                print("Payload:", payload)
     else:
         print("The url may not be injectable")
-        
 
-def test(url):
-    pass
-
-def craftPayload(url, itype, arguments):
-    if itype == filter:
+def craftPayload(url, itype, arguments=False):
+    if itype == filter and not arguments == False:
         crafted = url + payload["filter"][arguments[0]] + arguments[1]
     elif itype in tests:
         crafted = url + itype
+    else:
+        crafted = url
+        print("Couldn't craft payload.")
+    return crafted
 
 #lfiscan.py --inject --resource=index.php 
-def inject(url, itype, **argument):
+def inject(payload):
     pass
 
 if __name__ == '__main__':
