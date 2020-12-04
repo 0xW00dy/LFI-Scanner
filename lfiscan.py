@@ -101,8 +101,10 @@ def inject(payload):
 if __name__ == '__main__': #NOTE: THIS IS ONLY FOR TESTING, WILL SOON USE GETOPT
     if sys.argv[1] == "--test": 
         test(sys.argv[2])
-    elif sys.argv[1] == "--inject" and :
-        if len(sys.argv) == 3:
-            itype = argv[2]
-            resource = argv[3]
+    elif sys.argv[1] == "--inject" and len(sys.argv) == 4:
+        itype = sys.argv[2]
+        resource = sys.argv[3]
+    else:
+        print("Error in command syntax")
+        usage()
         
