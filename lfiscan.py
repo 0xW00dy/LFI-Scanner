@@ -114,7 +114,7 @@ def main():
         usage()
         sys.exit(2)
     url    = None
-    usage  = False
+    usg  = False
     scan   = False
     test   = False
     inject = False
@@ -124,7 +124,7 @@ def main():
     }
     for o, a in opts:
         if o in ("-h", "--help"):
-            usage = True
+            usg = True
         elif o in ("-u", "--url"):
             url = a
         elif o in ("-s", "--scan"):
@@ -136,7 +136,7 @@ def main():
             injectdict["type"] = a[0]
             injectdict["resource"] = a[1]
     
-    if usage:
+    if usg:
         usage() 
     elif type(url) is str:
         if scan:
