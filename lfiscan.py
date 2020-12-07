@@ -104,51 +104,57 @@ def inject(url, *argv):
 
 def main():
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "husti", ["help",
-                                                           "url",
-                                                           "scan",
+        opts, args = getopt.getopt(sys.argv[1:], "hustir:v", ["help",
+                                                           "url=",
+                                                           "scan=",
                                                            "test",
-                                                           "inject"])
+                                                           "inject=",
+                                                           "resource="])
     except getopt.GetoptError as err:
         print(err)
         usage()
         sys.exit(2)
     url    = None
-    usg  = False
-    scan   = False
-    test   = False
-    inject = False
+    usageSet  = False
+    scanSet   = False
+    testSet   = False
+    injectSet = False
     injectdict = {
         "type"     : None,
         "resource" : None
     }
     for o, a in opts:
         if o in ("-h", "--help"):
-            usg = True
+            usageSet = True
         elif o in ("-u", "--url"):
             url = a
         elif o in ("-s", "--scan"):
-            scan = True
+            scanSet = True
         elif o in ("-t", "--test"):
-            test = True
+            testSet = True
         elif o in ("-i", "--inject"):
-            inject = True
-            injectdict["type"] = a[0]
-            injectdict["resource"] = a[1]
+            injecSet = True
+            injectdict["type"] = a
+        elif o in ("-r", "--resource") and injec:
+            injectdict["resource"] = a
+        else:
+            assert False, "unhandled option"
     
-    if usg:
+    if usageSet:
         usage() 
     elif type(url) is str:
-        if scan:
+        if scanSet:
             pass #TODO
-        elif test:
+        elif testSet:
             test(url)
-        elif inject:
+        elif injectSet:
             valid = True
             for key in injectdict:
                 if injectdict[key] == None:
                     valid = False
+                    print(f"Missing {key}")
             if valid and injectdict["type"] in payloads:
+                print(injectdict)
                 inject(url, injectdict["type"], injectdict["resource"])
             elif not valid:
                 usage()
