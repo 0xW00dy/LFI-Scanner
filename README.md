@@ -4,7 +4,7 @@ This is a simple Scanner for Local File Inclusion.
 
 Usage: 
 
-```bash
+```
 lfiscan.py [options] [arguments]
 
 --url <url>            : URL of the website
