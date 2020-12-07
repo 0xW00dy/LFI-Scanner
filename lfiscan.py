@@ -113,9 +113,10 @@ def main():
         print(err)
         usage()
         sys.exit(2)
-    url = None
-    scan = False
-    test = False
+    url    = None
+    usage  = False
+    scan   = False
+    test   = False
     inject = False
     injectdict = {
         "type"     : None,
