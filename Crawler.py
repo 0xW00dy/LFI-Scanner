@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+import threading
 
 class Crawler:
     def __init__(self, url):
