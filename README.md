@@ -17,3 +17,6 @@ At the moment you can:
 
 - Retrieve the content of a page from a website vulnerable to php://filter
 - Scan if a URL might be vulnerable
+
+
+NB: I can't be responsible for what you might do with this tool.

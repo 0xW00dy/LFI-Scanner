@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import base64
-import argparse
 import getopt
 import os
 import re
@@ -15,6 +14,14 @@ from usage import usage, injection_usage
 from items import payloads, errors
 
 
+
+def scan(url):
+    crawler = Crawler(url)
+    #TODO:
+    #    Implementer le crawler
+    #    Ajouter la regex
+    
+    
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
     if regex.search(url):
@@ -46,7 +53,11 @@ def craftPayload(url, *argv):
         return url + payloads[argv[0]] + argv[1] 
         
 def injectionTest(payload):
-    if re.search('zip://', payload) or re.search('php://input', payload) or re.search('phar://', payload):
+    if re.search('zip://', payload) 
+        pass
+    elif re.search('php://input', payload):
+        pass
+    elif re.search('phar://', payload):
         pass
     else:
         r = requests.get(payload)
@@ -144,7 +155,7 @@ def main():
         usage() 
     elif type(url) is str:
         if scanSet:
-            pass #TODO
+            scan(url) #TODO
         elif testSet:
             test(url)
         elif injectSet:
