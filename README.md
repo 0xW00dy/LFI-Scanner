@@ -13,7 +13,7 @@ lfiscan.py [options] [arguments]
 --inject [type] [opts] : Executes LFI Injection on vulnerable URL
 ```
 
-For the moment you can:
+At the moment you can:
 
 - Retrieve the content of a page from a website vulnerable to php://filter
 - Scan if a URL might be vulnerable
