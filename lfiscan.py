@@ -11,6 +11,7 @@ import requests
 
 from Crawler import Crawler
 
+
 payloads = {
     "../": "../",
     "b64encode"        : "php://filter/convert.base64-encode/resource=",
@@ -29,7 +30,6 @@ errors = [
     "Warning: include()",
     "failed to open stream"    
 ]
-
 
 def usage():
     print("Usage: ./lfiscan.py [option] [argument]")
@@ -53,7 +53,7 @@ def strip(url):
         idx = re.findall(regex, url)
         return ''.join([url.split(idx[0])[0], idx[0]])
     else:
-        print("Erreur, l'url rentrée n'est pas au bon format.")
+        print("Error, url entered is not correct.")
         return ""
 
 def test(url):
