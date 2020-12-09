@@ -13,9 +13,8 @@ class Crawler:
             self.crawl(url)
 
     def crawl(self, url):
-        self.visited.append(url)
         with open('logs.txt', 'a') as f:
-            f.write(f"[~] Visited url: {url}")
+            f.write(f"[~] Visited url: {url}\n")
         site = requests.get(url)
         soup = BeautifulSoup(site.text, 'lxml')
         links = []
@@ -39,8 +38,9 @@ class Crawler:
         
         for link in self.toVisit:
             if not link in self.visited and not link == self.url and "http" in link:
-                self.crawl(link)
-                return True
+                self.visited.append(link)
+                thread = threading.Thread(target=self.crawl, args=(link,))
+                thread.start()
                 
     def get_crawled(self):
         return self.visited
