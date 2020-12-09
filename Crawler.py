@@ -1,6 +1,5 @@
 from bs4 import BeautifulSoup
 import requests
-import re
 import threading
 
 class Crawler:
@@ -10,29 +9,46 @@ class Crawler:
         else:
             self.url = url
             self.visited = [self.url]
+            self.toVisit = []
             self.crawl(url)
-            for link in list(set(self.visited)):
-                print(link)
 
     def crawl(self, url):
         self.visited.append(url)
+        print(f"[~] Visited url: {url}")
         site = requests.get(url)
         soup = BeautifulSoup(site.text, 'lxml')
         links = []
 
+        toVisit = []
         for link in soup.findAll('a'):
-            link = link['href']
-            reg = re.compile("^\*.\*.\*\/")
-            if self.url in link and not self.url == link:
-                links.append(link) 
-            elif link.startswith('.'):
-                links.append(self.url + link[1:])   
-            elif link.startswith('?'):
-                links.append(self.url + link)
-            elif not reg.search(url):
-                links.append(self.url + link)
-
+            links.append(link.get('href'))
+        for link in soup.findAll('link'):
+            links.append(link.get('href'))
+            
+        for i in links:
+            print(i)   
+            
         for link in links:
-            if not link in self.visited and not link == self.url:
-                self.visited.append(link)
+            if self.url.split('/')[2] in str(link):
+                if str(link).startswith('.'):
+                    toVisit.append(self.url + link[1:])
+                    toVisit.append(link)   
+                elif str(link).startswith('?'):
+                    toVisit.append(self.url + link)
+                    toVisit.append(link)
+                elif str(link).startswith('/'):
+                    url = self.url.split('/')[0] + '//' + self.url.split('/')[2] 
+                    toVisit.append(url + link)
+                elif str(link).startswith('http'):
+                    url = link
+                    toVisit.append(url)
+            
+        for link in toVisit:
+            if not link in self.visited and not link == self.url and "http":
                 self.crawl(link)
+                
+        def get_crawled():
+            return self.visited
+                
+                
+crawler = Crawler("https://github.com/ityouknow/python-crawler/tree/master/1024")

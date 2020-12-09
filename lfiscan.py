@@ -53,7 +53,7 @@ def craftPayload(url, *argv):
         return url + payloads[argv[0]] + argv[1] 
         
 def injectionTest(payload):
-    if re.search('zip://', payload) 
+    if re.search('zip://', payload):
         pass
     elif re.search('php://input', payload):
         pass
@@ -134,6 +134,7 @@ def main():
         "type"     : None,
         "resource" : None
     }
+    
     for o, a in opts:
         if o in ("-h", "--help"):
             usageSet = True
