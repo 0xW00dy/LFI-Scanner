@@ -14,7 +14,8 @@ class Crawler:
 
     def crawl(self, url):
         self.visited.append(url)
-        print(f"[~] Visited url: {url}")
+        with open('logs.txt', 'a') as f:
+            f.write(f"[~] Visited url: {url}")
         site = requests.get(url)
         soup = BeautifulSoup(site.text, 'lxml')
         links = []

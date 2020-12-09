@@ -19,20 +19,23 @@ def scan(url):
     links = crawler.get_crawled()
     maybeVuln = []
     for link in links:
-        if injectable(link):
+        if injectable(link):  
             maybeVuln.append(link)
     
     vuln = []
-    
+    written = []
     for link in maybeVuln:
-        if test(link):
+        if test(link, False): #False -> sets verbosity to false. You don't want to be spammed
             vuln.append(link)
-    for link in set(vuln):
-        print(strip(link), "might be vulnerable for LFI")
-      
+    for link in vuln:
+        link = strip(link)
+        if link not in written:
+            print(link, "might be vulnerable for LFI")
+            print("Try injecting with --url [url] --inject [type] --resource [resource]")
+            written.append(link)
       
         
-def injectable(url):
+def injectable(url, v=True):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
     if regex.search(url):
         return True
@@ -51,15 +54,16 @@ def strip(url):
 
 
 
-def test(url):
+def test(url, v=True):
     vuln = False
     if injectable(url):
         for test in payloads:
             payload = craftPayload(strip(url), payloads[test])
-            test = injectionTest(payload)
+            test = injectionTest(payload, v)
             if test:
                 vuln = True
-                print("Payload:", payload)
+                if v:
+                    print("Payload:", payload)
     else:    
         print("The url may not be injectable")
     return vuln
@@ -74,7 +78,7 @@ def craftPayload(url, *argv):
 
 
         
-def injectionTest(payload):
+def injectionTest(payload, v = True):
     if re.search('zip://', payload):
         pass
     elif re.search('php://input', payload):
@@ -90,15 +94,17 @@ def injectionTest(payload):
                     vuln = True
             if doubleCheck(r.text, payload):
                 vuln = True
-            if vuln:
+            if vuln and v:
                 print("Website might be vulnerable.")
                 print("Try injecting with --inject [url] [ressource]\n")
             return vuln
         elif r.status_code == 403:
-            print("Website might be vulnerable: returned", r.status_code, "\n")
+            if v:    
+                print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         elif r.status_code == 301 or r.status_code == 302:
-            print("Website might be vulnerable: returned", r.status_code, "\n")
+            if v:
+                print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         else:
             return False
