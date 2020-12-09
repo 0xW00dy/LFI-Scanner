@@ -44,11 +44,8 @@ class Crawler:
                     toVisit.append(url)
             
         for link in toVisit:
-            if not link in self.visited and not link == self.url and "http":
+            if not link in self.visited and not link == self.url and "http" in link:
                 self.crawl(link)
                 
         def get_crawled():
             return self.visited
-                
-                
-crawler = Crawler("https://github.com/ityouknow/python-crawler/tree/master/1024")
