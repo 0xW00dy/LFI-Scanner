@@ -17,10 +17,23 @@ from items import payloads, errors
 
 def scan(url):
     crawler = Crawler(url)
-    #TODO:
-    #    Implementer le crawler
-    #    Ajouter la regex
+    links = crawler.get_crawled()
+    maybeVuln = []
+    for link in links:
+        print(link)
+        if injectable(link):
+            maybeVuln.append(link)
     
+    vuln = []
+    
+    for link in maybeVuln:
+        if injectionTest(link):
+            vuln.append(link)
+    
+    for link in set(vuln):
+        print(link, "might be vulnerable for LFI")
+        
+        
     
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
@@ -37,14 +50,15 @@ def strip(url):
         print("Error, url entered is not correct.")
         return ""
 
-def test(url):
+def test(url, v=1):
     if injectable(url):
         for test in payloads:
             payload = craftPayload(strip(url), payloads[test])
-            if injectionTest(payload):
+            if injectionTest(payload) and v == 1:
                 print("Payload:", payload)
     else:
-        print("The url may not be injectable")
+        if v == 1:
+            print("The url may not be injectable")
 
 def craftPayload(url, *argv):
     if len(argv) == 1:
@@ -52,7 +66,7 @@ def craftPayload(url, *argv):
     else:
         return url + payloads[argv[0]] + argv[1] 
         
-def injectionTest(payload):
+def injectionTest(payload, v=1):
     if re.search('zip://', payload):
         pass
     elif re.search('php://input', payload):
@@ -66,15 +80,16 @@ def injectionTest(payload):
             for error in errors:
                 if error in r.text:
                     vuln = True
-            if vuln:
+            if vuln and v == 1:
                 print("Website might be vulnerable.")
                 print("Try injecting with --inject [url] [ressource]\n")
-            return True
+            return vuln
         elif r.status_code == 403:
             print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         elif r.status_code == 301 or r.status_code == 302:
-            print("Website might be vulnerable: returned", r.status_code, "\n")
+            if v == 1:
+                print("Website might be vulnerable: returned", r.status_code, "\n")
             return True
         else:
             return False
@@ -117,7 +132,7 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hustir:v", ["help",
                                                            "url=",
-                                                           "scan=",
+                                                           "scan",
                                                            "test",
                                                            "inject=",
                                                            "resource="])
@@ -147,7 +162,7 @@ def main():
         elif o in ("-i", "--inject"):
             injecSet = True
             injectdict["type"] = a
-        elif o in ("-r", "--resource") and injec:
+        elif o in ("-r", "--resource") and injecSet:
             injectdict["resource"] = a
         else:
             assert False, "unhandled option"
@@ -156,7 +171,7 @@ def main():
         usage() 
     elif type(url) is str:
         if scanSet:
-            scan(url) #TODO
+            scan(url)
         elif testSet:
             test(url)
         elif injectSet:

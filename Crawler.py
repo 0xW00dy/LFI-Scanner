@@ -19,33 +19,27 @@ class Crawler:
         soup = BeautifulSoup(site.text, 'lxml')
         links = []
 
-        toVisit = []
         for link in soup.findAll('a'):
             links.append(link.get('href'))
         for link in soup.findAll('link'):
             links.append(link.get('href'))
             
-        for i in links:
-            print(i)   
-            
         for link in links:
-            if self.url.split('/')[2] in str(link):
-                if str(link).startswith('.'):
-                    toVisit.append(self.url + link[1:])
-                    toVisit.append(link)   
-                elif str(link).startswith('?'):
-                    toVisit.append(self.url + link)
-                    toVisit.append(link)
-                elif str(link).startswith('/'):
-                    url = self.url.split('/')[0] + '//' + self.url.split('/')[2] 
-                    toVisit.append(url + link)
-                elif str(link).startswith('http'):
-                    url = link
-                    toVisit.append(url)
-            
-        for link in toVisit:
+            if str(link).startswith('.'):
+                self.toVisit.append(self.url + link[1:])   
+            elif str(link).startswith('?'):
+                self.toVisit.append(self.url + link)
+            elif str(link).startswith('/'):
+                url = self.url.split('/')[0] + '//' + self.url.split('/')[2] 
+                self.toVisit.append(url + link)
+            elif str(link).startswith('http'):
+                url = link
+                self.toVisit.append(url)
+        
+        for link in self.toVisit:
             if not link in self.visited and not link == self.url and "http" in link:
                 self.crawl(link)
+                return True
                 
-        def get_crawled():
-            return self.visited
+    def get_crawled(self):
+        return self.visited
