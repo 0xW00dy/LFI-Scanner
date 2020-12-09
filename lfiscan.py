@@ -14,27 +14,24 @@ from usage import usage, injection_usage
 from items import payloads, errors
 
 
-
 def scan(url):
     crawler = Crawler(url)
     links = crawler.get_crawled()
     maybeVuln = []
     for link in links:
-        print(link)
         if injectable(link):
             maybeVuln.append(link)
     
     vuln = []
     
     for link in maybeVuln:
-        if injectionTest(link):
+        if test(link, 0):
             vuln.append(link)
-    
+    for i in vuln:
+        i = strip(i)
     for link in set(vuln):
         print(link, "might be vulnerable for LFI")
         
-        
-    
 def injectable(url):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
     if regex.search(url):
@@ -51,14 +48,20 @@ def strip(url):
         return ""
 
 def test(url, v=1):
+    vuln = False
     if injectable(url):
         for test in payloads:
             payload = craftPayload(strip(url), payloads[test])
-            if injectionTest(payload) and v == 1:
+            test = injectionTest(payload, v)
+            if test and v == 1:
+                vuln = True
                 print("Payload:", payload)
+            elif test and v == 0:
+                vuln = True
     else:
         if v == 1:
             print("The url may not be injectable")
+    return vuln
 
 def craftPayload(url, *argv):
     if len(argv) == 1:
@@ -80,6 +83,8 @@ def injectionTest(payload, v=1):
             for error in errors:
                 if error in r.text:
                     vuln = True
+            if doubleCheck(r.text, payload):
+                vuln = True
             if vuln and v == 1:
                 print("Website might be vulnerable.")
                 print("Try injecting with --inject [url] [ressource]\n")
@@ -93,6 +98,12 @@ def injectionTest(payload, v=1):
             return True
         else:
             return False
+
+def doubleCheck(text, payload):
+    r = requests.get(payload + '../')
+    if text == r.text:
+        return False
+    return True
 
 def exploit(payload):
     if re.search('zip://', payload):
