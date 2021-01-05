@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import base64
-import getopt
+import argparse
 import os
 import re
 import sys
@@ -9,7 +9,7 @@ import threading
 
 import requests
 
-from Crawler import Crawler
+from scanner.Crawler import Crawler
 from usage import usage, injection_usage
 from items import payloads, errors
 
@@ -17,14 +17,14 @@ from items import payloads, errors
 def scan(url):
     crawler = Crawler(url)
     links = crawler.get_crawled()
-    maybeVuln = []
+    mayBeVuln = []
     for link in links:
         if injectable(link):  
-            maybeVuln.append(link)
+            mayBeVuln.append(link)
     
     vuln = []
     written = []
-    for link in maybeVuln:
+    for link in mayBeVuln:
         if test(link, False): #False -> sets verbosity to false. You don't want to be spammed
             vuln.append(link)
     for link in vuln:
@@ -34,7 +34,14 @@ def scan(url):
             print("Try injecting with --url [url] --inject [type] --resource [resource]")
             written.append(link)
       
-        
+
+def isUrl(url):
+    try: 
+        requests.get(url)
+        return True
+    except:
+        return False       
+      
 def injectable(url, v=True):
     regex = re.compile('\?[a-zA-Z0-9]{1,}=')
     if regex.search(url):
@@ -110,7 +117,6 @@ def injectionTest(payload, v = True):
             return False
 
 
-
 def doubleCheck(text, payload):
     r = requests.get(payload + '../')
     if text == r.text:
@@ -145,8 +151,7 @@ def exploit(payload):
         elif r.status_code == 404:
             print("Code: 404 Page Not Found")
 
-
-                 
+     
 def inject(url, *argv):
     print(argv)
     if len(argv) == 2 and argv[0] in payloads:
@@ -155,71 +160,49 @@ def inject(url, *argv):
         exploit(payload)
 
 
-
 def main():
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hustir:v", ["help",
-                                                           "url=",
-                                                           "scan",
-                                                           "test",
-                                                           "inject=",
-                                                           "resource="])
-    except getopt.GetoptError as err:
-        print(err)
-        usage()
-        sys.exit(2)
-    url    = None
-    usageSet  = False
-    scanSet   = False
-    testSet   = False
-    injectSet = False
-    injectdict = {
-        "type"     : None,
-        "resource" : None
-    }
+    parser = argparse.ArgumentParser(description=("LFIScanner"))
     
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            usageSet = True
-        elif o in ("-u", "--url"):
-            url = a
-        elif o in ("-s", "--scan"):
-            scanSet = True
-        elif o in ("-t", "--test"):
-            testSet = True
-        elif o in ("-i", "--inject"):
-            injectSet = True
-            injectdict["type"] = a
-        elif o in ("-r", "--resource") and injectSet:
-            injectdict["resource"] = a
-        else:
-            assert False, "unhandled option"
-            
-    if usageSet:
-        usage() 
-    elif type(url) is str:
-        if scanSet:
+    parser.add_argument('-u', '--url',
+                        nargs='?',
+                        help='URL of the website',
+                        required=True)
+    parser.add_argument('-s','--scan',
+                        help="Crawl the website looking for vulnerable URL",
+                        action='store_true',
+                        required=False)
+    parser.add_argument('-t', '--test',
+                        action='store_true',
+                        help="Tests an URL for LFI",
+                        required=False)
+    parser.add_argument('-i', '--inject',
+                        action='store_true',
+                        help="Executes LFI Injection on vulnerable URL",
+                        required=False)
+    parser.add_argument('-v', '--verbosity',
+                        action='store_true',
+                        help='Activate verbosity',
+                        required=False)
+    
+    
+    args = parser.parse_args()
+    
+    global verbosity
+    verbosity = args.verbosity
+    
+    if isUrl(args.url):
+        url = args.url
+        if args.scan:
             scan(url)
-        elif testSet:
+        elif args.test:
             test(url)
-        elif injectSet:
-            print("Checkpoint 1")
-            valid = True
-            for key in injectdict:
-                if injectdict[key] == None:
-                    valid = False
-                    print(f"Missing {key}")
-            if valid and injectdict["type"] in payloads:
-                print(injectdict)
-                inject(url, injectdict["type"], injectdict["resource"])
-            elif not valid:
-                usage()
-            else:
-                injection_usage()       
-    else:
-        print("Error. You have to enter a url.")
-        usage()
+        elif args.inject:
+            pass #TODO
 
+        
+    else:
+        print("[~] URL has to be valid.")
+    
 
 
 if __name__ == '__main__':
