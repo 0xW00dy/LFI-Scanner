@@ -21,3 +21,6 @@ At the moment you can:
 
 
 NB: I can't be responsible for what you might do with this tool.
+
+
+Currently Work In Progress, Doesn't work at all atm
